@@ -97,21 +97,4 @@ public class ContactServiceTest {
     assertThat(contactsByEmail.size()).isEqualTo(1);
     assertThat(contactsByEmail.get(0).getEmail().contains("second"));
   }
-
-//  @Test
-//  public void testDeleteContact() throws Exception {
-//    //Don't know how to mock deletion of entities.
-//
-//    Contact contact = new Contact("test", "test@test.com");
-//
-//    given(contactRepository.save(contact)).willReturn(contact);
-//    given(contactRepository.findByNameRegex(anyString())).willReturn(Lists.newArrayList(contact));
-//
-//    contactService.createContact("test", "test@test.com");
-//    List<Contact> searchedContacts = contactService.searchContact("test", null);
-//    assertThat(searchedContacts.size()).isEqualTo(1);
-//
-//    contactService.deleteContact("test@test.com");
-//    verify(contactRepository, times(1)).delete(contact);
-//  }
 }

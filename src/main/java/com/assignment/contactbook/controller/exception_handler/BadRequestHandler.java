@@ -2,7 +2,6 @@ package com.assignment.contactbook.controller.exception_handler;
 
 import com.assignment.contactbook.entity.response.SingleContactResponse;
 import com.assignment.contactbook.exception.BadRequestException;
-import java.util.HashMap;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
