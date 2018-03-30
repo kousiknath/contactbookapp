@@ -13,7 +13,7 @@ import javax.persistence.Id;
 public class Contact {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private String id;
+  private long id;
 
   private String name;
 
@@ -25,7 +25,7 @@ public class Contact {
     this.email = email;
   }
 
-  public String getId() {
+  public long getId() {
     return id;
   }
 
