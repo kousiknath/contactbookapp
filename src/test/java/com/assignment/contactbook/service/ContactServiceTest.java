@@ -84,8 +84,8 @@ public class ContactServiceTest {
     String secondContactEmail = "second@test.com";
     Contact secondContact = new Contact(secondContactName, secondContactEmail);
 
-    given(contactRepository.findByNameRegex("first")).willReturn(Lists.newArrayList(firstContact, secondContact));
-    given(contactRepository.findByEmailRegex("second")).willReturn(Lists.newArrayList(secondContact));
+    given(contactRepository.findByNameIgnoreCaseContaining("first")).willReturn(Lists.newArrayList(firstContact, secondContact));
+    given(contactRepository.findByEmailIgnoreCaseContaining("second")).willReturn(Lists.newArrayList(secondContact));
 
     List<Contact> contactsByName = contactService.searchContact("first", null);
     assertThat(contactsByName.size()).isEqualTo(2);

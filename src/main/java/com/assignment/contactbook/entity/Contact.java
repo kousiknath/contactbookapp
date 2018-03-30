@@ -1,17 +1,23 @@
 package com.assignment.contactbook.entity;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Created by kousik on 28/03/18.
  */
-@Document(collection = "contacts")
+@Entity
 public class Contact {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private String id;
 
   private String name;
+
+  @Column(unique = true)
   private String email;
 
   public Contact(String name, String email){

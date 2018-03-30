@@ -8,6 +8,20 @@ spring:
       repositories:
         enabled: true
 
+  datasource:
+    driverClassName: org.postgresql.Driver
+    maxActive: 10
+    maxIdle: 5
+    minIdle: 2
+    initialSize: 5
+    removeAbandoned: true
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+    properties:
+      hibernate:
+        temp.use_jdbc_metadata_defaults: false
+
 #logging
 logging:
   level:

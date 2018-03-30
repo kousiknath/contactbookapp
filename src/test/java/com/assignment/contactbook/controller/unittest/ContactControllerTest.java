@@ -105,8 +105,8 @@ public class ContactControllerTest {
   @Test
   public void testSearchContactByName() throws Exception {
     Contact c = new Contact(name, email);
-    doReturn(Arrays.asList(c)).when(contactRepository).findByNameRegex(name);
-    doReturn(Arrays.asList(c)).when(contactRepository).findByEmailRegex(email);
+    doReturn(Arrays.asList(c)).when(contactRepository).findByNameIgnoreCaseContaining(name);
+    doReturn(Arrays.asList(c)).when(contactRepository).findByEmailIgnoreCaseContaining(email);
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
         get("/contacts/search?name=test123")).andReturn().getResponse();

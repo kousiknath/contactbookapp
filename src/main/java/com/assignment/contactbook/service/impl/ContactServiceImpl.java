@@ -31,7 +31,7 @@ public class ContactServiceImpl implements ContactService {
     if(!utility.isValidInput(name) || !utility.isValidInput(email))
       throw new BadRequestException("Name and email both should be valid");
 
-    List<Contact> matchingContact = contactRepository.findByEmailRegex(email);
+    List<Contact> matchingContact = contactRepository.findByEmailIgnoreCaseContaining(email);
     if(matchingContact != null && matchingContact.size() > 0)
       throw new ContactAlreadyExistsException("Contact already exists");
 
@@ -62,7 +62,7 @@ public class ContactServiceImpl implements ContactService {
     if(!utility.isValidInput(email))
       throw new BadRequestException("Unique email id is required for deleting entry.");
 
-    List<Contact> foundContact = contactRepository.findByEmailRegex(email);
+    List<Contact> foundContact = contactRepository.findByEmailIgnoreCaseContaining(email);
     if(foundContact.size() > 0)
       contactRepository.delete(foundContact.get(0));
   }
@@ -73,9 +73,8 @@ public class ContactServiceImpl implements ContactService {
       throw new BadRequestException("Either name or email should be non null");
 
     if(utility.isValidInput(name))
-      return contactRepository.findByNameRegex(name);
+      return contactRepository.findByNameIgnoreCaseContaining(name);
 
-    return contactRepository.findByEmailRegex(email);
-
+    return contactRepository.findByEmailIgnoreCaseContaining(email);
   }
 }

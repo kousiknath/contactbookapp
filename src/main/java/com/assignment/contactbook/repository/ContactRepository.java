@@ -2,17 +2,13 @@ package com.assignment.contactbook.repository;
 
 import com.assignment.contactbook.entity.Contact;
 import java.util.List;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Created by kousik on 28/03/18.
  */
-public interface ContactRepository extends MongoRepository<Contact, String> {
+public interface ContactRepository extends JpaRepository<Contact, String> {
 
-  @Query(value = "{'name': {$regex: ?0, $options: 'i'}}")
-  List<Contact> findByNameRegex(String nameRegex);
-
-  @Query(value = "{'email': {$regex: ?0, $options: 'i'}}")
-  List<Contact> findByEmailRegex(String emailRegex);
+  List<Contact> findByNameIgnoreCaseContaining(String nameRegex);
+  List<Contact> findByEmailIgnoreCaseContaining(String emailRegex);
 }

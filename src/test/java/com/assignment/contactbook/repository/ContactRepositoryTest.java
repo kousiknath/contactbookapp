@@ -44,7 +44,7 @@ public class ContactRepositoryTest {
 
   @Test
   public void testSearchContactWithFullName(){
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("test");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
 
     assertThat(searchedContacts.size()).isEqualTo(1);
     assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
@@ -52,7 +52,7 @@ public class ContactRepositoryTest {
 
   @Test
   public void testSearchContactWithPartialName(){
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("tes");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes");
 
     assertThat(searchedContacts.size()).isEqualTo(1);
     assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
@@ -60,7 +60,7 @@ public class ContactRepositoryTest {
 
   @Test
   public void testSearchContactCaseInsensitive(){
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("Test");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("Test");
 
     assertThat(searchedContacts.size()).isEqualTo(1);
     assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
@@ -71,7 +71,7 @@ public class ContactRepositoryTest {
     Contact anotherContact = new Contact("test1", "test1@test.com");
     contactRepository.save(anotherContact);
 
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("tes");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes");
 
     assertThat(searchedContacts.size()).isEqualTo(2);
   }
@@ -79,13 +79,13 @@ public class ContactRepositoryTest {
   @Test
   public void testEditContact(){
     String newName = "test_new";
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("test");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
     Contact existingContact = searchedContacts.get(0);
 
     existingContact.setName(newName);
     contactRepository.save(existingContact);
 
-    List<Contact> searchedContactsAfterUpdation = contactRepository.findByNameRegex("test");
+    List<Contact> searchedContactsAfterUpdation = contactRepository.findByNameIgnoreCaseContaining("test");
 
     assertThat(searchedContactsAfterUpdation.get(0).getId()).isEqualTo(existingContact.getId());
     assertThat(searchedContactsAfterUpdation.get(0).getName()).isEqualTo(newName);
@@ -93,12 +93,12 @@ public class ContactRepositoryTest {
 
   @Test
   public void testDeleteContact(){
-    List<Contact> searchedContacts = contactRepository.findByNameRegex("test");
+    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
     assertThat(searchedContacts.size()).isEqualTo(1);
 
     contactRepository.delete(searchedContacts.get(0));
 
-    List<Contact> searchedContactsAfterDeletion = contactRepository.findByNameRegex("test");
+    List<Contact> searchedContactsAfterDeletion = contactRepository.findByNameIgnoreCaseContaining("test");
     assertThat(searchedContactsAfterDeletion.size()).isEqualTo(0);
   }
 }
