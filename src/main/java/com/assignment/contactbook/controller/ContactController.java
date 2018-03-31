@@ -63,8 +63,8 @@ public class ContactController {
       @RequestBody ContactDTO contactDTO) throws BadRequestException, UnAuthrizedException {
     validateToken(token);
 
-    if(id == null)
-      throw new BadRequestException("Id of a contact can't be empty");
+    if(id == null || id <= 0)
+      throw new BadRequestException("Valid id required to update contact");
 
     Contact matchingContact = contactService.searchById(id);
     if(matchingContact == null)
