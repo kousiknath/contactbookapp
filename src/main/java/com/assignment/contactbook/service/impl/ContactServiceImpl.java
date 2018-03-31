@@ -8,7 +8,6 @@ import com.assignment.contactbook.repository.ContactRepository;
 import com.assignment.contactbook.service.ContactService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,8 +32,8 @@ public class ContactServiceImpl implements ContactService {
     if(!utility.isValidInput(name) || !utility.isValidInput(email))
       throw new BadRequestException("Name and email both should be valid");
 
-    Page<Contact> matchingContact = contactRepository.findByEmailIgnoreCaseContaining(email, new PageRequest(1, 10));
-    if(matchingContact != null && matchingContact.getContent().size() > 0)
+    Contact matchingContact = contactRepository.findByEmail(email);
+    if(matchingContact != null)
       throw new ContactAlreadyExistsException("Contact already exists");
 
     return contactRepository.save(new Contact(name, email));
