@@ -20,6 +20,10 @@ public class Contact {
   @Column(unique = true)
   private String email;
 
+  public Contact(){
+
+  }
+
   public Contact(String name, String email){
     this.name = name;
     this.email = email;
@@ -27,6 +31,10 @@ public class Contact {
 
   public long getId() {
     return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
   }
 
   public String getName() {
