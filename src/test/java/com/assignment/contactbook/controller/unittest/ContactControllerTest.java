@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
@@ -28,6 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,6 +55,9 @@ public class ContactControllerTest {
   @MockBean
   private ContactRepository contactRepository;
 
+  @Value("${app.token}")
+  private String authToken;
+
   private JacksonTester<ContactDTO> jsonRequest;
   private JacksonTester<SingleContactResponse> jsonResponse;
   private JacksonTester<MultipleContactsResponse> multipleContactsJsonResponse;
@@ -75,6 +81,7 @@ public class ContactControllerTest {
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
         post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
             .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
 
     SingleContactResponse expectedResponse = new SingleContactResponse("Success", c);
@@ -89,13 +96,16 @@ public class ContactControllerTest {
     String newName = "test123345";
 
     Contact c = new Contact(name, email);
+    c.setId(1);
     Contact expectedUpdatedContact = new Contact(newName, email);
+    expectedUpdatedContact.setId(1);
 
-    doReturn(c).when(contactService).searchExactByEmail(anyString());
+    doReturn(c).when(contactService).searchById(anyLong());
     doReturn(expectedUpdatedContact).when(contactService).updateContact(any(Contact.class), anyString(), anyString());
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
-        patch("/contacts/test123@test.com").contentType(MediaType.APPLICATION_JSON)
+        patch("/contacts/1").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
             .content(jsonRequest.write(new ContactDTO(newName, email)).getJson())).andReturn().getResponse();
 
     SingleContactResponse expectedResponse = new SingleContactResponse("Success", expectedUpdatedContact);
@@ -107,11 +117,12 @@ public class ContactControllerTest {
   @Test
   public void testSearchContactByName() throws Exception {
     Contact c = new Contact(name, email);
-    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByNameIgnoreCaseContaining(name, new PageRequest(1, 10));
-    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByEmailIgnoreCaseContaining(email, new PageRequest(1, 10));
+    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByNameIgnoreCaseContaining(anyString(), any(PageRequest.class));
+    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByEmailIgnoreCaseContaining(anyString(), any(PageRequest.class));
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
-        get("/contacts/search?name=test123")).andReturn().getResponse();
+        get("/contacts/search?name=test123").header("token", authToken))
+        .andReturn().getResponse();
 
     MultipleContactsResponse expectedResponse = new MultipleContactsResponse("Success", Arrays.asList(c));
     assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
