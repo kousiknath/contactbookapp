@@ -11,6 +11,8 @@ public interface ContactService {
   Contact createContact(String name, String email) throws Exception;
   Contact updateContact(Contact existingContact, String newName, String newEmail)
       throws BadRequestException;
-  void deleteContact(String email) throws BadRequestException;
-  List<Contact> searchContact(String name, String email) throws BadRequestException;
+  void deleteContact(Long id) throws BadRequestException;
+  List<Contact> searchContact(String name, String email, int page, int size) throws BadRequestException;
+  Contact searchExactByEmail(String email) throws BadRequestException;
+  Contact searchById(Long id) throws BadRequestException;
 }

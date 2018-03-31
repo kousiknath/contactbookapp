@@ -6,7 +6,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -18,11 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @DataJpaTest
+@AutoConfigureTestDatabase(replace= Replace.NONE)
 public class ContactRepositoryTest {
 
   private final String contactName = "test";
   private final String contactEmail = "test@test.com";
   private Contact testContact;
+  private PageRequest defaultPageRequest;
 
   @Autowired
   private ContactRepository contactRepository;
@@ -34,6 +40,7 @@ public class ContactRepositoryTest {
 
     this.testContact = new Contact(contactName, contactEmail);
     this.testContact = contactRepository.save(this.testContact);
+    this.defaultPageRequest = new PageRequest(0, 10);
   }
 
   @Test
@@ -44,26 +51,27 @@ public class ContactRepositoryTest {
 
   @Test
   public void testSearchContactWithFullName(){
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
+    Page<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test", defaultPageRequest);
+    List<Contact> contacts = searchedContacts.getContent();
 
-    assertThat(searchedContacts.size()).isEqualTo(1);
-    assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
+    assertThat(contacts.size()).isEqualTo(1);
+    assertThat(contacts.get(0).getName()).isEqualTo(this.contactName);
   }
 
   @Test
   public void testSearchContactWithPartialName(){
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes");
+    Page<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes", defaultPageRequest);
 
-    assertThat(searchedContacts.size()).isEqualTo(1);
-    assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
+    assertThat(searchedContacts.getContent().size()).isEqualTo(1);
+    assertThat(searchedContacts.getContent().get(0).getName()).isEqualTo(this.contactName);
   }
 
   @Test
   public void testSearchContactCaseInsensitive(){
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("Test");
+    Page<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("Test", defaultPageRequest);
 
-    assertThat(searchedContacts.size()).isEqualTo(1);
-    assertThat(searchedContacts.get(0).getName()).isEqualTo(this.contactName);
+    assertThat(searchedContacts.getContent().size()).isEqualTo(1);
+    assertThat(searchedContacts.getContent().get(0).getName()).isEqualTo(this.contactName);
   }
 
   @Test
@@ -71,34 +79,44 @@ public class ContactRepositoryTest {
     Contact anotherContact = new Contact("test1", "test1@test.com");
     contactRepository.save(anotherContact);
 
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes");
+    Page<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("tes", defaultPageRequest);
 
-    assertThat(searchedContacts.size()).isEqualTo(2);
+    assertThat(searchedContacts.getContent().size()).isGreaterThan(1);
+  }
+
+  @Test
+  public void testSearchContactWithMoreThan10Result(){
+    for(int i = 0; i < 15; i++){
+      String n = "test_new" + i;
+      String e = n + "@test.com";
+
+      contactRepository.save(new Contact(n, e));
+    }
+
+    Page<Contact> firstPageResult = contactRepository.findByNameIgnoreCaseContaining("tes", defaultPageRequest);
+    assertThat(firstPageResult.getContent().size()).isEqualTo(defaultPageRequest.getPageSize());
   }
 
   @Test
   public void testEditContact(){
     String newName = "test_new";
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
-    Contact existingContact = searchedContacts.get(0);
+    Contact existingContact = contactRepository.findByEmail(contactEmail);
 
     existingContact.setName(newName);
     contactRepository.save(existingContact);
 
-    List<Contact> searchedContactsAfterUpdation = contactRepository.findByNameIgnoreCaseContaining("test");
+    Contact searchedContactAfterUpdation = contactRepository.findByEmail(contactEmail);
 
-    assertThat(searchedContactsAfterUpdation.get(0).getId()).isEqualTo(existingContact.getId());
-    assertThat(searchedContactsAfterUpdation.get(0).getName()).isEqualTo(newName);
+    assertThat(searchedContactAfterUpdation.getId()).isEqualTo(existingContact.getId());
+    assertThat(searchedContactAfterUpdation.getName()).isEqualTo(newName);
   }
 
   @Test
   public void testDeleteContact(){
-    List<Contact> searchedContacts = contactRepository.findByNameIgnoreCaseContaining("test");
-    assertThat(searchedContacts.size()).isEqualTo(1);
+    Contact searchedContact = contactRepository.findByEmail(contactEmail);
+    contactRepository.delete(searchedContact);
 
-    contactRepository.delete(searchedContacts.get(0));
-
-    List<Contact> searchedContactsAfterDeletion = contactRepository.findByNameIgnoreCaseContaining("test");
-    assertThat(searchedContactsAfterDeletion.size()).isEqualTo(0);
+    Contact searchedContactAfterDeletion = contactRepository.findByEmail(contactEmail);
+    assertThat(searchedContactAfterDeletion).isNull();
   }
 }

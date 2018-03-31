@@ -17,6 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -89,7 +91,7 @@ public class ContactControllerTest {
     Contact c = new Contact(name, email);
     Contact expectedUpdatedContact = new Contact(newName, email);
 
-    doReturn(Arrays.asList(c)).when(contactService).searchContact(anyString(), anyString());
+    doReturn(c).when(contactService).searchExactByEmail(anyString());
     doReturn(expectedUpdatedContact).when(contactService).updateContact(any(Contact.class), anyString(), anyString());
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
@@ -105,8 +107,8 @@ public class ContactControllerTest {
   @Test
   public void testSearchContactByName() throws Exception {
     Contact c = new Contact(name, email);
-    doReturn(Arrays.asList(c)).when(contactRepository).findByNameIgnoreCaseContaining(name);
-    doReturn(Arrays.asList(c)).when(contactRepository).findByEmailIgnoreCaseContaining(email);
+    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByNameIgnoreCaseContaining(name, new PageRequest(1, 10));
+    doReturn(new PageImpl<>(Arrays.asList(c))).when(contactRepository).findByEmailIgnoreCaseContaining(email, new PageRequest(1, 10));
 
     MockHttpServletResponse apiResponse = mockMvc.perform(
         get("/contacts/search?name=test123")).andReturn().getResponse();

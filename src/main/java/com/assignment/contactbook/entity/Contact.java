@@ -63,23 +63,22 @@ public class Contact {
 
   @Override
   public int hashCode() {
-    int hashCode = 0;
+    int hashCode = 17;
 
-    if(name != null)
-      hashCode += 31 * name.hashCode();
-
-    if(email != null)
-      hashCode += email.hashCode();
-
+    hashCode = 31 * hashCode + (name != null ? name.hashCode() : 0);
+    hashCode = 31 * hashCode + (email != null ? email.hashCode() : 0);
     return hashCode;
   }
 
   @Override
   public boolean equals(Object obj) {
-    Contact another = (Contact) obj;
+    if(obj == this)
+      return true;
 
-    if(another == null || this.getClass() != another.getClass())
+    if(obj == null || this.getClass() != obj.getClass())
       return false;
+
+    Contact another = (Contact) obj;
 
     return this.getName().equals(another.getName()) &&
         this.getEmail().equals(another.getEmail()) &&

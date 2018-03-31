@@ -8,6 +8,8 @@ import com.assignment.contactbook.repository.ContactRepository;
 import com.assignment.contactbook.service.ContactService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +33,8 @@ public class ContactServiceImpl implements ContactService {
     if(!utility.isValidInput(name) || !utility.isValidInput(email))
       throw new BadRequestException("Name and email both should be valid");
 
-    List<Contact> matchingContact = contactRepository.findByEmailIgnoreCaseContaining(email);
-    if(matchingContact != null && matchingContact.size() > 0)
+    Page<Contact> matchingContact = contactRepository.findByEmailIgnoreCaseContaining(email, new PageRequest(1, 10));
+    if(matchingContact != null && matchingContact.getContent().size() > 0)
       throw new ContactAlreadyExistsException("Contact already exists");
 
     return contactRepository.save(new Contact(name, email));
@@ -58,23 +60,38 @@ public class ContactServiceImpl implements ContactService {
 
   @Override
   @Transactional
-  public void deleteContact(String email) throws BadRequestException {
-    if(!utility.isValidInput(email))
-      throw new BadRequestException("Unique email id is required for deleting entry.");
+  public void deleteContact(Long id) throws BadRequestException {
+    if(id == null)
+      throw new BadRequestException("Id is required for deleting entry.");
 
-    List<Contact> foundContact = contactRepository.findByEmailIgnoreCaseContaining(email);
-    if(foundContact.size() > 0)
-      contactRepository.delete(foundContact.get(0));
+    contactRepository.delete(id);
   }
 
   @Override
-  public List<Contact> searchContact(String name, String email) throws BadRequestException {
+  public List<Contact> searchContact(String name, String email, int page, int size) throws BadRequestException {
     if(!utility.isValidInput(name) && !utility.isValidInput(email))
       throw new BadRequestException("Either name or email should be non null");
 
     if(utility.isValidInput(name))
-      return contactRepository.findByNameIgnoreCaseContaining(name);
+      return contactRepository.findByNameIgnoreCaseContaining(name, new PageRequest(page, size)).getContent();
 
-    return contactRepository.findByEmailIgnoreCaseContaining(email);
+    return contactRepository.findByEmailIgnoreCaseContaining(email, new PageRequest(page, size)).getContent();
   }
+
+  @Override
+  public Contact searchExactByEmail(String email) throws BadRequestException {
+    if(!utility.isValidInput(email))
+      throw new BadRequestException("Invalid email!");
+
+    return contactRepository.findByEmail(email);
+  }
+
+  @Override
+  public Contact searchById(Long id) throws BadRequestException {
+    if(id == null)
+      throw new BadRequestException("Invalid contact id!");
+
+    return contactRepository.findById(id);
+  }
+
 }

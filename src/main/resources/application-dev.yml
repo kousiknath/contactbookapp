@@ -1,0 +1,52 @@
+spring:
+  data:
+    mongodb:
+      database: 'contacts'
+      host: 'localhost'
+      password: ''
+      port: 27017
+      repositories:
+        enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kousik
+    username: kousik
+    password: ''
+    driverClassName: org.postgresql.Driver
+    maxActive: 10
+    maxIdle: 5
+    minIdle: 2
+    initialSize: 5
+    removeAbandoned: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+    properties:
+      hibernate:
+        temp.use_jdbc_metadata_defaults: false
+
+#logging
+logging:
+  level:
+    org:
+      springframework:
+        data: debug
+
+
+#spring.data.mongodb.authentication-database= # Authentication database name.
+#spring.data.mongodb.database=test # Database name.
+#spring.data.mongodb.field-naming-strategy= # Fully qualified name of the FieldNamingStrategy to use.
+#spring.data.mongodb.grid-fs-database= # GridFS database name.
+#spring.data.mongodb.host=localhost # Mongo server host.
+#spring.data.mongodb.password= # Login password of the mongo server.
+#spring.data.mongodb.port=27017 # Mongo server port.
+#spring.data.mongodb.repositories.enabled=true # Enable Mongo repositories.
+#spring.data.mongodb.uri=mongodb://localhost/test # Mongo database URI. When set, host and port are ignored.
+#spring.data.mongodb.username= # Login user of the mongo server.
+
+#Link: https://springframework.guru/configuring-spring-boot-for-mongo/
+
+app:
+  token: 'c6ca2e46-34d1-11e8-b467-0ed5f89f718b'

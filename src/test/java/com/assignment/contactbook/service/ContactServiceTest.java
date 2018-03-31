@@ -3,19 +3,22 @@ package com.assignment.contactbook.service;
 import com.assignment.contactbook.entity.Contact;
 import com.assignment.contactbook.exception.BadRequestException;
 import com.assignment.contactbook.repository.ContactRepository;
+import java.util.Arrays;
 import java.util.List;
-import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 /**
  * Created by kousik on 28/03/18.
@@ -84,16 +87,19 @@ public class ContactServiceTest {
     String secondContactEmail = "second@test.com";
     Contact secondContact = new Contact(secondContactName, secondContactEmail);
 
-    given(contactRepository.findByNameIgnoreCaseContaining("first")).willReturn(Lists.newArrayList(firstContact, secondContact));
-    given(contactRepository.findByEmailIgnoreCaseContaining("second")).willReturn(Lists.newArrayList(secondContact));
+    PageImpl<Contact> pagedResult = new PageImpl<>(Arrays.asList(firstContact, secondContact));
+    PageImpl<Contact> partialPagedResult = new PageImpl<>(Arrays.asList(secondContact));
 
-    List<Contact> contactsByName = contactService.searchContact("first", null);
+    given(contactRepository.findByNameIgnoreCaseContaining(anyString(), any(PageRequest.class))).willReturn(pagedResult);
+    given(contactRepository.findByEmailIgnoreCaseContaining(anyString(), any(PageRequest.class))).willReturn(partialPagedResult);
+
+    List<Contact> contactsByName = contactService.searchContact("first", null, 0, 10);
     assertThat(contactsByName.size()).isEqualTo(2);
 
     for(Contact c : contactsByName)
       assertThat(c.getName().contains("first"));
 
-    List<Contact> contactsByEmail = contactService.searchContact(null, "second");
+    List<Contact> contactsByEmail = contactService.searchContact(null, "second", 0, 10);
     assertThat(contactsByEmail.size()).isEqualTo(1);
     assertThat(contactsByEmail.get(0).getEmail().contains("second"));
   }

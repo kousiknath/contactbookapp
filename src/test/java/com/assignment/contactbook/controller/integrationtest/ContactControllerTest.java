@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
@@ -43,11 +44,13 @@ public class ContactControllerTest {
   @Autowired
   private ContactRepository contactRepository;
 
+  @Value("${app.token}")
+  private String authToken;
+
   private JacksonTester<ContactDTO> jsonRequest;
 
   private String name;
   private String email;
-  private MockHttpServletResponse apiResponse;
 
   @Before
   public void setUp() throws Exception {
@@ -56,15 +59,16 @@ public class ContactControllerTest {
     JacksonTester.initFields(this, new ObjectMapper());
     this.name = "test123";
     this.email = "test123@test.com";
-
-    ContactDTO contactDTO = new ContactDTO(name, email);
-    apiResponse = mockMvc.perform(
-        post("/contacts").contentType(MediaType.APPLICATION_JSON)
-            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
   }
 
   @Test
   public void testCreateContact() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
+    MockHttpServletResponse apiResponse = mockMvc.perform(
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
+
     JSONObject jsonApiResponse = new JSONObject(apiResponse.getContentAsString());
     JSONObject result = new JSONObject(jsonApiResponse.get("result").toString());
 
@@ -74,36 +78,16 @@ public class ContactControllerTest {
   }
 
   @Test
-  public void testUpdateContact() throws Exception {
-    String newName = "test123345";
-
-    MockHttpServletResponse apiResponse = mockMvc.perform(
-        patch("/contacts/test123@test.com").contentType(MediaType.APPLICATION_JSON)
-            .content(jsonRequest.write(new ContactDTO(newName, email)).getJson())).andReturn().getResponse();
-
-    JSONObject jsonApiResponse = new JSONObject(apiResponse.getContentAsString());
-    JSONObject result = new JSONObject(jsonApiResponse.get("result").toString());
-
-    assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK.value());
-    assertThat(result.get("name")).isEqualTo(newName);
-    assertThat(result.get("email")).isEqualTo(this.email);
-  }
-
-  @Test
-  public void testUpdateContactWhenContactDoesNotExist() throws Exception {
-    String newName = "test123345";
-
-    MockHttpServletResponse apiResponse = mockMvc.perform(
-        patch("/contacts/test1234@test.com").contentType(MediaType.APPLICATION_JSON)
-            .content(jsonRequest.write(new ContactDTO(newName, email)).getJson())).andReturn().getResponse();
-
-    assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
-  }
-
-  @Test
   public void testSearchContactByName() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
+    mockMvc.perform(
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
+
     MockHttpServletResponse apiResponse = mockMvc.perform(
-        get("/contacts/search?name=test123")).andReturn().getResponse();
+        get("/contacts/search?name=test").header("token", authToken))
+        .andReturn().getResponse();
 
     JSONObject jsonApiResponse = new JSONObject(apiResponse.getContentAsString());
     JSONArray items = new JSONArray(jsonApiResponse.get("result").toString());
@@ -116,8 +100,15 @@ public class ContactControllerTest {
 
   @Test
   public void testSearchContactByEmail() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
+    mockMvc.perform(
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
+
     MockHttpServletResponse apiResponse = mockMvc.perform(
-        get("/contacts/search?email=test123")).andReturn().getResponse();
+        get("/contacts/search?email=test123@test.com").header("token", authToken))
+        .andReturn().getResponse();
 
     JSONObject jsonApiResponse = new JSONObject(apiResponse.getContentAsString());
     JSONArray items = new JSONArray(jsonApiResponse.get("result").toString());
@@ -129,10 +120,71 @@ public class ContactControllerTest {
   }
 
   @Test
-  public void testDeleteContact() throws Exception {
+  public void testUpdateContact() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
     MockHttpServletResponse apiResponse = mockMvc.perform(
-        delete("/contacts/test123@test.com")).andReturn().getResponse();
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
 
-    assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.NO_CONTENT.value());
+    JSONObject existingContactApiResponse = new JSONObject(apiResponse.getContentAsString());
+    JSONObject existingContactApiResponseResult = new JSONObject(existingContactApiResponse.get("result").toString());
+    Long existingContactId = existingContactApiResponseResult.getLong("id");
+
+    String newName = "test123345";
+
+    MockHttpServletResponse apiResponse1 = mockMvc.perform(
+        patch("/contacts/" + existingContactId).contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(new ContactDTO(newName, email)).getJson())).andReturn().getResponse();
+
+    assertThat(apiResponse1.getStatus()).isEqualTo(HttpStatus.OK.value());
+
+    JSONObject jsonApiResponse = new JSONObject(apiResponse1.getContentAsString());
+    JSONObject result = new JSONObject(jsonApiResponse.get("result").toString());
+
+    assertThat(result.get("name")).isEqualTo(newName);
+    assertThat(result.get("email")).isEqualTo(this.email);
+  }
+
+  @Test
+  public void testUpdateContactWhenContactDoesNotExist() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
+    MockHttpServletResponse apiResponse = mockMvc.perform(
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
+
+    JSONObject existingContactApiResponse = new JSONObject(apiResponse.getContentAsString());
+    JSONObject existingContactApiResponseResult = new JSONObject(existingContactApiResponse.get("result").toString());
+    Long existingContactId = existingContactApiResponseResult.getLong("id");
+
+    String newName = "test123345";
+
+    MockHttpServletResponse apiResponse1 = mockMvc.perform(
+        patch("/contacts/" + (existingContactId + 100L)).contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(new ContactDTO(newName, email)).getJson())).andReturn().getResponse();
+
+    assertThat(apiResponse1.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+  }
+
+  @Test
+  public void testDeleteContact() throws Exception {
+    ContactDTO contactDTO = new ContactDTO(name, email);
+
+    MockHttpServletResponse apiResponse = mockMvc.perform(
+        post("/contacts").contentType(MediaType.APPLICATION_JSON)
+            .header("token", authToken)
+            .content(jsonRequest.write(contactDTO).getJson())).andReturn().getResponse();
+
+    JSONObject existingContactApiResponse = new JSONObject(apiResponse.getContentAsString());
+    JSONObject existingContactApiResponseResult = new JSONObject(existingContactApiResponse.get("result").toString());
+    Long existingContactId = existingContactApiResponseResult.getLong("id");
+
+    MockHttpServletResponse apiResponse1 = mockMvc.perform(
+        delete("/contacts/" + existingContactId).header("token", authToken)).andReturn().getResponse();
+
+    assertThat(apiResponse1.getStatus()).isEqualTo(HttpStatus.NO_CONTENT.value());
   }
 }
